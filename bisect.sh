@@ -2,7 +2,7 @@
 
 cd /home/edoardo/secondary-checkout
 git submodule update --recursive
-#rm -rf target
+rm -rf target
 if ! ./build -j8 target/intree/codeql ; then
 	echo "Build failed, skipping commit";
 	exit 125;
