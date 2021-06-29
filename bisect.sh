@@ -9,4 +9,4 @@ if ! ./build -j8 target/intree/codeql ; then
 fi
 export CODEQL_DIST="/home/edoardo/secondary-checkout/target/intree/codeql"
 export PATH="/home/edoardo/secondary-checkout/target/intree/codeql:$PATH"
-codeql resolve queries --search-path /home/edoardo/secondary-checkout/ql --format=bylanguage -- /home/edoardo/test-query-repo/js
+codeql resolve queries --format=bylanguage -- /home/edoardo/test-query-repo/js
