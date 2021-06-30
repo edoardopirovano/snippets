@@ -46,8 +46,12 @@ for query, change in sorted(difference.items(), key=lambda item: item[1]):
         print("-----------------------------------------------------------")
         seen_positive = True
     if abs(change) > (int(sys.argv[3]) * 1000):
+        timeBefore = before[query]
         if change > 0:
             changeStr = "+" + str(int(change/1000)) + " seconds"
+            percentStr = "+" + str(int((change/timeBefore)*100)) + "%"
         else:
             changeStr = str(int(change/1000)) + " seconds"
-        print(query + ".ql: " + changeStr)
+            percentStr = str(int((change/timeBefore)*100)) + "%"
+
+        print(query + ".ql: " + changeStr + " (" + percentStr + ")")
