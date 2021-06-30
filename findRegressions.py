@@ -1,6 +1,7 @@
+# Usage: python3 findRegressions.py logOld logNew 100
+
 import sys
 import re
-
 
 def parse_time(time):
     if "ms" in time:
