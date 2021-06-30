@@ -40,13 +40,13 @@ for query in after:
 seen_positive = False
 for query, change in sorted(difference.items(), key=lambda item: item[1]):
     if change > 0 and not seen_positive:
-        print("---")
+        print("-----------------------------------------------------------")
         print("(differences less than " + sys.argv[3] + " seconds omitted)")
-        print("---")
+        print("-----------------------------------------------------------")
         seen_positive = True
-    if change > (int(sys.argv[3]) * 1000) or change < - (int(sys.argv[3]) * 1000):
+    if abs(change) > (int(sys.argv[3]) * 1000):
         if change > 0:
-            changeStr = "+" + str(change/1000) + " seconds"
+            changeStr = "+" + str(int(change/1000)) + " seconds"
         else:
-            changeStr = str(change/1000) + " seconds"
+            changeStr = str(int(change/1000)) + " seconds"
         print(query + ".ql: " + changeStr)
