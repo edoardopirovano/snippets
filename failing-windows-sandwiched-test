@@ -1,0 +1,16 @@
+
+    call .\build -j2 target/intree/codeql
+    set "PATH=%PATH%;%cd%\target\intree\codeql"
+    cd codeql-testing-repository
+    call codeql.exe database init -l cpp --source-root . --begin-tracing --trace-process-level=1 sandwiched-db
+    call .\sandwiched-db\working\tracingEnvironment\start-tracing.bat
+    .\build.sh
+    call .\sandwiched-db\working\tracingEnvironment\end-tracing.bat
+    call codeql.exe database finalize sandwiched-db
+    call codeql.exe database analyze --format=sarif-latest --output=cppResults.sarif sandwiched-db ../codeql-testing-queries/cpp/allExpressions.ql
+    call python3 ..\odasa-buildutils\files\integration-tests\check-sarif.py cppResults.sarif 2
+    if errorlevel 1 (
+       echo Checking of results failed
+       exit /b %errorlevel%
+    )
+    call rmdir /s /q sandwiched-db cppResults.sarif
