@@ -12,6 +12,7 @@ for fileName in sys.argv[1:]:
 
     predicatesInLayer = {}
     pipelineEndEvents = {}
+    predicateStartEvents = {}
 
     log = list(map(json.loads, contents.split('\n\n')))
     for event in log:
@@ -20,6 +21,7 @@ for fileName in sys.argv[1:]:
             if layer not in predicatesInLayer:
                 predicatesInLayer[layer] = []
             predicatesInLayer[layer].append(event['eventId'])
+            predicateStartEvents[event['eventId']] = event
         if event['type'] == "PIPELINE_COMPLETED":
             pipelineEndEvents[event['startEvent']] = event
         if event['type'] == "LOG_HEADER":
@@ -39,17 +41,33 @@ for fileName in sys.argv[1:]:
                         pipelineStartsInGeneration[generation] = []
                     pipelineStartsInGeneration[generation].append(event)
             for generation in pipelineStartsInGeneration:
-                maxDuration = 0
-                for startEvent in pipelineStartsInGeneration[generation]:
-                    endEvent = pipelineEndEvents[startEvent['eventId']]
-                    if startEvent['eventId'] == endEvent['startEvent']:
-                        duration = parseTime(endEvent['time']) - parseTime(startEvent['time'])
-                        if duration > maxDuration:
-                            maxDuration = duration
-                        linearDuration += duration
-                parallelDuration += maxDuration
+                canParallelise = True
+                predicatesEvaluatedThisGeneration = []
+                for event in pipelineStartsInGeneration[generation]:
+                    startEvent = predicateStartEvents[event['predicateStartEvent']]
+                    predicatesEvaluatedThisGeneration.append(startEvent['predicateName'])
+                for event in pipelineStartsInGeneration[generation]:
+                    startEvent = predicateStartEvents[event['predicateStartEvent']]
+                    ra = startEvent['ra'][event['raReference']]
+                    for line in ra:
+                        if not canParallelise:
+                            break
+                        for predicate in predicatesEvaluatedThisGeneration:
+                            if predicate + " " in line:
+                                canParallelise = False
+                                break
+                if canParallelise:
+                    maxDuration = 0
+                    for startEvent in pipelineStartsInGeneration[generation]:
+                        endEvent = pipelineEndEvents[startEvent['eventId']]
+                        if startEvent['eventId'] == endEvent['startEvent']:
+                            duration = parseTime(endEvent['time']) - parseTime(startEvent['time'])
+                            if duration > maxDuration:
+                                maxDuration = duration
+                            linearDuration += duration
+                    parallelDuration += maxDuration
 
     savings = linearDuration - parallelDuration
     totalTime = endTime - startTime
     percentageSavings = (savings / totalTime) * 100
-    print(f"{fileName}: could save {savings:.1f}s out of {totalTime:.1f} ({percentageSavings:.1f}%)")
+    print(f"{fileName}: could save {savings:.1f} seconds out of {totalTime:.1f} ({percentageSavings:.1f}%)")
